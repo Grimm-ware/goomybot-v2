@@ -3,7 +3,7 @@ const {
 } = require("mongodb");
 const config = require('../config/botConfig.json')
 
-class DatabaseManager {
+	class DatabaseManager {
 	constructor() {
 		this.url = config.dev.mongoConnection;
 		this.client = new MongoClient(this.url, {
@@ -73,7 +73,7 @@ class DatabaseManager {
 	}
 	async deleteFromCollectionByField(collectionName, filter) {
 		try {
-         const database = this.client.db();
+			const database = this.client.db();
 			const collection = database.collection(collectionName);
 			const result = await collection.deleteMany(filter);
 			console.log(`${result.deletedCount} documents deleted`);
@@ -101,40 +101,39 @@ class DatabaseManager {
 		}
 	}
 
-//used for creating user views, generally to get pokemon but in future can be used for items or whatever else
-async getFromCollectionByFieldsWithPagination(collectionName, fields, pageNumber, itemsPerPage, projection) {
-  try {
-    // Connect to the database
-    var database = this.client.db();
-    var collection = database.collection(collectionName);
+	//used for creating user views, generally to get pokemon but in future can be used for items or whatever else
+	async getFromCollectionByFieldsWithPagination(collectionName, fields, pageNumber, itemsPerPage, projection) {
+		try {
+			// Connect to the database
+			var database = this.client.db();
+			var collection = database.collection(collectionName);
 
-    // Calculate the skip value based on the page number and items per page
-    var skip = (pageNumber - 1) * itemsPerPage;
+			// Calculate the skip value based on the page number and items per page
+			var skip = (pageNumber - 1) * itemsPerPage;
 
-    // Define the projection to specify the fields to return
-    var projectionFields = {};
-    if (projection) {
-      projection.forEach(field => {
-        projectionFields[field] = 1;
-      });
-    }
+			// Define the projection to specify the fields to return
+			var projectionFields = {};
+			if (projection) {
+				projection.forEach(field => {
+					projectionFields[field] = 1;
+				});
+			}
 
-    // Perform the query with pagination and projection
-    const result = await collection
-      .find(fields)
-      .project(projectionFields) // Apply the projection
-      .skip(skip)
-      .limit(itemsPerPage)
-      .toArray();
+			// Perform the query with pagination and projection
+			const result = await collection
+				.find(fields)
+				.project(projectionFields) // Apply the projection
+				.skip(skip)
+				.limit(itemsPerPage)
+				.toArray();
 
-    return result;
-  } catch (error) {
-    console.error('Error querying collection with pagination:', error);
-    this.disconnect();
-    throw error;
-  }
-}
-   
+			return result;
+		} catch (error) {
+			console.error('Error querying collection with pagination:', error);
+			this.disconnect();
+			throw error;
+		}
+	}
 
 	async getRaidPokemonByName(name) {
 		try {

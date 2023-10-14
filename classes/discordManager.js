@@ -3,7 +3,7 @@ const client = new Discord.Client();
 const GlobalUtil = require("./classes/globalUtility.js");
 const botConfig = require('./config/botconfig.json')
 
-class discordManager {
+	class discordManager {
 
 	async function login(env) {
 		client.once('ready', () => {
@@ -21,9 +21,8 @@ class discordManager {
 				//console.log('is bot message: true');
 				return;
 			} else if (message[0] == ".") {
-            console.log('recieved command');
-         }
+				console.log('recieved command');
+			}
+		}
 		}
 	}
-}
-	
