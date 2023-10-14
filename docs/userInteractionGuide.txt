@@ -1,0 +1,27 @@
+User Interactions Design: 
+
+user -> usersPokemon
+   each pokemon a user catches will be given their id and stored in a seperate collection to the user
+   at any one time only the current pokemon is loaded into memory
+   Features: 
+   when the user uses the box command, return a paginated list of pokemon they own (set by users filter) 
+   User can filter list by: shiny, dex number, favorites, level, name, region
+   User can check pokedex to find missing pokemon (by region as well)
+
+user -> moves
+   Features: 
+      User can get list of moves their current pokemon can learn (paginated) 
+      User can teach their pokemon any move on the previous list (conditions?)
+      If user has TM of move the cost is free? 
+
+user -> items
+   Features: 
+      User can take/give item from current Pokemon
+      Get list of items user currently has, filterable by pocket?
+      Need list of items that user can obtain and in which region?
+      Where can items be used?
+      What additional items need to be added for game specific mechanics 
+      
+
+      
+ 

@@ -1,0 +1,9 @@
+Database Report: 
+   1017 objects being read and written back at ~4-5 seconds 
+   10000 objects can be written in 5 seconds in single connections 
+   100000 objects can be written in 30 seconds in single connections
+
+Database User Guide:
+   Read Scheme: 
+      
+   
