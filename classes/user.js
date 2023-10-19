@@ -10,6 +10,9 @@ class User {
         this.avatar = avatar;
         this.location = location;
         this.tier = tier;
+        this.pokemonSeed = Math.random();
+        this.shinySeed = Math.random();
+        this.tierSeed = Math.random();
     }
 }
 

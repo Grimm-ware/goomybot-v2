@@ -77,3 +77,5 @@ typings/
 
 # Exclude the config folder
 /config/
+*.png
+*.jpg

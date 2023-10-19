@@ -1,6 +1,10 @@
 const Pokemon = require('./pokemon.js')
 	const GlobalUtil = require("./globalUtility.js");
-
+const {
+	createCanvas,
+	loadImage
+} = require('canvas');
+const fs = require('fs');
 class PokemonManager {
 
 	constructor(dbConnection) {
@@ -45,6 +49,41 @@ class PokemonManager {
 			//console.log(JSON.stringify(p))
 			return p
 	}
+   
+   async createBattleScene(userPokemon, wildPokemon){
+      var back = ''
+      if(userPokemon.sprite.back != null){
+         back = await loadImage(userPokemon.sprite.back);
+      }else{
+         back = await loadImage(userPokemon.sprite.front);
+      }
+      
+      const front = await loadImage(wildPokemon.sprite.front); // Replace with your image URLs
+      
+ // Calculate canvas size based on the maximum dimension of the images
+        // Calculate canvas size to accommodate both images diagonally
+        const canvasWidth = 128;
+        const canvasHeight = 128;
+
+        // Create a canvas with a white background
+        const canvas = createCanvas(canvasWidth, canvasHeight);
+        const ctx = canvas.getContext('2d');
+         
+
+        // Position the front image in the top right corner
+        ctx.drawImage(front, 40, -10);
+
+        // Position the back image in the bottom left corner
+        ctx.drawImage(back, -25, 60);
+
+
+	// Save the combined image
+	//const outputFile = 'combined.png';
+	//const out = fs.createWriteStream(outputFile);
+	//const stream = canvas.createPNGStream();
+	//stream.pipe(out);
+   return canvas.toBuffer('image/png');
+   }
 
 	/*
 	User is presented list of their pokemon like:
@@ -69,7 +108,7 @@ class PokemonManager {
 	async catchPokemonBulk(bulkOperation) {
 		await this.dbConnection.upsertBulkObject("userPokemon", bulkOperation, "uuid")
 	}
-   
+
 	async getUserPokemonTable(filter, pageNumber) {
 		var result = await this.dbConnection.getFromCollectionByFieldsWithPagination("userPokemon", filter, pageNumber, this.pageSize, ["name", "uuid"])
 			var table = {}
