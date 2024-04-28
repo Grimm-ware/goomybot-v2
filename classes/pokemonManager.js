@@ -11,6 +11,58 @@ class PokemonManager {
 		this.dbConnection = dbConnection
 			this.pageSize = 10;
 	}
+   
+   async saveUserPokemon(pokemon){
+      await this.dbConnection.upsertObject('userPokemon', pokemon, {
+			"userId": pokemon.userId,
+         "uuid": pokemon.uuid
+		})
+   }
+   
+   async loadUserPokemon(filter){
+      var dbResponse = (await this.dbConnection.getFromCollectionByField('userPokemon', filter))[0]
+      return dbResponse
+   }   
+
+   
+   async getNewPokemonByName(name, level, isShiny, originalTrainerId){
+		//pokemon constructor(id, name, types, level, exp, nextExp, nickName, ability, nature, stats, ev, iv, moves, gender, statusCondition, tier, region, heldItem, isShiny, sprite, originalTrainerId)
+		var dbResponse = (await this.dbConnection.getFromCollectionByField('pokemon', {
+				name: name
+			}))[0]
+		var name = dbResponse.name
+			//console.log(`Name: ${JSON.stringify(name)}`)
+			var nature = GlobalUtil.getRandomFromArray(this.getNatures());
+		//console.log(`Nature: ${JSON.stringify(nature)}`)
+		var iv = this.getRandomIv();
+		//console.log(`IV: ${JSON.stringify(iv)}`)
+		var ev = this.getEv();
+		var stats = this.getStats(dbResponse, level, iv, ev, nature)
+			//console.log(`Stats: ${JSON.stringify(stats)}`)
+			var types = this.getTypes(dbResponse)
+			//console.log(`Type(s): ${JSON.stringify(types)}`)
+			var ability = this.getRandomAbility(dbResponse);
+		//console.log(`Ability: ${JSON.stringify(ability)}`)
+		var gender = this.getRandomGender()
+			//console.log(`Gender: ${JSON.stringify(gender)}`)
+			var sprite = this.getSprite(dbResponse, isShiny)
+			//console.log(`Sprite: ${JSON.stringify(sprite)}`)
+			//console.log(`Growth Rate: ${JSON.stringify(dbResponse.growth_rate)}`)
+			var exp = this.calculateExp(dbResponse, level)
+			//console.log(`EXP: ${JSON.stringify(exp)}`)
+			var nextExp = 0
+			if (level != 100) {
+				nextExp = this.calculateExp(dbResponse, level + 1)
+			}
+			//console.log(`Next EXP: ${JSON.stringify(nextExp)}`)
+			var moves = this.getRandomMoves(dbResponse, level)
+			//console.log(`Moves: ${JSON.stringify(moves)}`)
+			var heldItem = this.getRandomHeldItem(dbResponse, level)
+			//console.log(`Held Item: ${JSON.stringify(heldItem)}`)
+			var p = new Pokemon(originalTrainerId, dbResponse.id, dbResponse.name, types, level, exp, nextExp, "", ability, nature, stats, ev, iv, moves, gender, "", dbResponse.tier, dbResponse.region, heldItem, isShiny, sprite, originalTrainerId)
+			//console.log(JSON.stringify(p))
+			return p
+	}
 	async getNewPokemon(id, level, isShiny, originalTrainerId) {
 		//pokemon constructor(id, name, types, level, exp, nextExp, nickName, ability, nature, stats, ev, iv, moves, gender, statusCondition, tier, region, heldItem, isShiny, sprite, originalTrainerId)
 		var dbResponse = (await this.dbConnection.getFromCollectionByField('pokemon', {
@@ -84,6 +136,37 @@ class PokemonManager {
 	//stream.pipe(out);
    return canvas.toBuffer('image/png');
    }
+   
+   async createPokemonView(userPokemon, userAvatar){
+      var front = ''
+      if(userPokemon.sprite.front != null){
+         front = await loadImage(userPokemon.sprite.front);
+      }else{
+         front = await loadImage(userPokemon.sprite.front);
+      }
+      
+      var avatar = await loadImage(userAvatar);
+      
+      //const front = await loadImage(wildPokemon.sprite.front); // Replace with your image URLs
+      
+ // Calculate canvas size based on the maximum dimension of the images
+        // Calculate canvas size to accommodate both images diagonally
+        const canvasWidth = 128;
+        const canvasHeight = 128;
+
+        // Create a canvas with a white background
+        const canvas = createCanvas(canvasWidth, canvasHeight);
+        const ctx = canvas.getContext('2d');
+         
+
+        // Position the front image in the top right corner
+        ctx.drawImage(front, 50, 60);
+        ctx.drawImage(avatar, 0, 60);
+
+        // Position the back image in the bottom left corner
+        //ctx.drawImage(back, -25, 60);
+      return canvas.toBuffer('image/png');
+   }
 
 	/*
 	User is presented list of their pokemon like:
@@ -109,14 +192,7 @@ class PokemonManager {
 		await this.dbConnection.upsertBulkObject("userPokemon", bulkOperation, "uuid")
 	}
 
-	async getUserPokemonTable(filter, pageNumber) {
-		var result = await this.dbConnection.getFromCollectionByFieldsWithPagination("userPokemon", filter, pageNumber, this.pageSize, ["name", "uuid"])
-			var table = {}
-		for (var i = 0; i < result.length; i++) {
-			table[i] = result[i]
-		}
-		return table
-	}
+	
 
 	getRandomHeldItem(dbResponse) {
 		if (Math.random() <= .5 && dbResponse.held_items.length != 0) {

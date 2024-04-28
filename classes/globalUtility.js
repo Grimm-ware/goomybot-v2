@@ -1,3 +1,5 @@
+const { v4: uuidv4 } = require('uuid');
+
 class GlobalUtility {
 	static parseJSON(obj) {
 		if (typeof obj === 'string') {
@@ -24,6 +26,10 @@ class GlobalUtility {
 		// Return the parsed object
 		return obj;
 	}
+   
+   static getuuid(){
+      return uuidv4();
+   }
 
 	static sleep(ms) {
 		return new Promise((resolve) => {
