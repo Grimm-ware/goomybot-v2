@@ -3,28 +3,24 @@ const {
 } = require('discord.js');
 
 class EmbedGenerator{
-   async getGenericEmbed(description, file, attachment){
-      var embed = ''
-      var structure = {}
-      if(attachment == ''){
-         embed = new EmbedBuilder()
-            .setDescription(description)
-         structure = {embeds: [embed]}  
-      }
-      else{
-         embed = new EmbedBuilder()
-            .setDescription(description)
-            .setImage(attachment)
-         structure = {embeds: [embed], files: [file]}
-      }
-      return structure;
-      
-      
+   async getGenericEmbed(user, description, attachment) {
+       const embed = new EmbedBuilder()
+           .setTitle(user.name)
+           .setDescription(description);
+
+       if (attachment !== '') {
+           embed.setImage(attachment); // Use the attachment URL directly
+           //embed.setThumbnail(attachment); // Set the thumbnail to display next to the embed
+           
+       }
+
+       return embed;
    }
-   
+
+      
    async getTableEmbed(user, table){
       var str = ''
-      console.log(table)
+      //console.log(table)
       for(var i =0; i < Object.keys(table).length; i++){
          //console.log(i)
          str = str.concat(i, ": ", table[i].name, '\n')
@@ -32,20 +28,18 @@ class EmbedGenerator{
       //console.log(user)
       var embed = new EmbedBuilder()
             .setDescription(user.name.concat('\'s Pokemon: \n', str))
-      var structure = {embeds: [embed]}
-      return structure;
+      return embed
    }
    
-   async getPokemonView(pokemon, filter, file, attachment){
+   async getPokemonView(user, pokemon, filter, attachment){
       var str = ''
-      console.log(pokemon.types[0])
       if(filter == 'minimal'){
          str = `
          Name: ${pokemon.name}
          Level: ${pokemon.level}
          Shiny: ${pokemon.isShiny}
       `}
-      if(filter == 'stats'){
+      else if(filter == 'stats'){
          str = `
          Name: ${pokemon.name}
          HP: ${pokemon.stats.hp} (${pokemon.iv.hp})
@@ -55,7 +49,22 @@ class EmbedGenerator{
          Special Defense: ${pokemon.stats.specialDefense} (${pokemon.iv.specialDefense})
          Speed: ${pokemon.stats.speed} (${pokemon.iv.speed})
       `
-      }else{
+      }
+      else if(filter == "moves"){
+         
+         var moves = ''
+         for(var i = 1; i < 5; i++){
+            if(pokemon.moves[i] != undefined){
+               moves = moves.concat(pokemon.moves[i], '\n')
+            }
+         }
+         str = `
+         Name: ${pokemon.name}
+         Moves:
+         ${moves}
+      `
+      }
+      else{
          var types = ''
          if(pokemon.types[1] != undefined) 
             types = pokemon.types[0].concat(' ', pokemon.types[1])
@@ -69,9 +78,10 @@ class EmbedGenerator{
          Type(s): ${types}
          
       `
+      
       }
       
-      return this.getGenericEmbed(str, file, attachment)
+      return this.getGenericEmbed(user, str, attachment)
    }
    
 

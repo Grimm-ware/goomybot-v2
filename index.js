@@ -28,8 +28,6 @@ const discordClient = new Client({
 //await dbConnection.disconnect();
 const botConfig = require('./config/botconfig.json')
 
-	async function main() {}
-main();
 
 server.listen(3000, async() => {
 	await dbConnection.connect();
@@ -49,176 +47,172 @@ async function discordLogin(env) {
 }
 
 discordClient.on('messageCreate', async(message) => {
-
+   try{
 	if (message.author.id === '1161801960740110386') {
 		return; // Ignore messages from the bot itself
 	}
+   var user = {}
+   try{
+      user = await userManager.getUser(message.author.id)
+   } catch(error){
+      console.log('Could not load user')
+   }
+   const CommandRegex = /\.(.*?)(?=\s\.|$)/g;
+   const regex = /\.(.*?)(?=\s\.|$)/g;
+
+   let matches = [];
+   let match;
+
+   while ((match = regex.exec(message.content)) !== null) {
+       matches.push(match[1]);
+   }
 	//console.log(message);
 	var userMessage = message.author
-		if (message.content.includes('.spawn')) {
-			console.log('Received command');
-			var p = await pokemonManager.getNewPokemon(3, 100, true, '1');
-			var p2 = await pokemonManager.getNewPokemon(150, 5, true, '1');
-			var buffer = await pokemonManager.createBattleScene(p, p2);
-			// Define the embed here
-			var file = new AttachmentBuilder(buffer, 'battlescene.png');
-         var desc = `${userMessage.username} encountered ${p2.name.charAt(0).toUpperCase() + p2.name.slice(1)}!`
-         var attachment = 'attachment://battlescene.png'
-         // Send the embed
-         var embed = embedGenerator.getGenericEmbed(desc, file, attachment)   
-			message.channel.send({
-					embeds: [embed],
-					files: [file]
-			});
-		}
-      
-      else if (message.content.includes('.register')) {
-         //Get user pokemon choice
-         var choices = ['charmander', 'squirtle', 'bulbasaur'] 
-         var choice =(message.content.split(' '))[1]
-         if(choices.includes(choice)){
-            var currentPokemon = await pokemonManager.getNewPokemonByName(choice, 5, true, message.author.id)
-            //Create new user
-            //console.log(currentPokemon);
-            var user = await userManager.registerUser(message.author.id, userMessage.username, currentPokemon, "Kanto");
-            await pokemonManager.saveUserPokemon(currentPokemon);
-            //console.log(user)
+   var command = ''
+   var embeds = []
+   var files = []
+         structure = {embeds: [embed], files: [file]}
+   console.log(matches)
+      for(var i =0; i < matches.length && i <= 3; i++){
+         command = matches[i]
+         if (command.includes('spawn')) {
+            console.log('Received command');
+            var p = await pokemonManager.getNewPokemon(3, 100, true, '1');
+            var p2 = await pokemonManager.getNewPokemon(150, 5, true, '1');
+            var buffer = await pokemonManager.createBattleScene(p, p2);
+            // Define the embed here
+            var file = new AttachmentBuilder(buffer, 'battlescene.png');
+            var desc = `${userMessage.username} encountered ${p2.name.charAt(0).toUpperCase() + p2.name.slice(1)}!`
+            var attachment = 'attachment://battlescene.png'
+            // Send the embed
+            var embed = embedGenerator.getGenericEmbed(user, desc, file, attachment)   
+            message.channel.send({
+                  embeds: [embed],
+                  files: [file]
+            });
+         }
+         
+         else if (command.includes('register')) {
+            //Get user pokemon choice
+            var choices = ['charmander', 'squirtle', 'bulbasaur'] 
+            var choice =(command.split(' '))[1]
+            if(choices.includes(choice)){
+               var currentPokemon = await pokemonManager.getNewPokemonByName(choice, 5, true, message.author.id)
+               //Create new user
+               //console.log(currentPokemon);
+               var user = await userManager.registerUser(message.author.id, userMessage.username, currentPokemon, "Kanto");
+               await pokemonManager.saveUserPokemon(currentPokemon);
+               //console.log(user)
+               var buffer = await pokemonManager.createPokemonView(currentPokemon, user.avatar);
+               var file = new AttachmentBuilder(buffer).setName('pokemonViewRegister.png')
+               var desc = `Registered ${userMessage.username}`
+               var attachment = 'attachment://pokemonViewRegister.png'
+               var embed = await embedGenerator.getGenericEmbed(user, desc, file, attachment)
+               embeds.push(embed)
+               files.push(file)
+            }
+            else{
+               var embed = await embedGenerator.getGenericEmbed('Please choose a starter','','')
+               embeds.push(embed)
+            }
+            message.channel.send(embed);
+         }
+         if(command.includes('delete')){
+            //var user = await userManager.getUser(message.author.id)
+            await userManager.deleteUser(message.author.id);
+            //await userManager.deleteUser('1');
+         }
+         if (command.includes('profile')) {
+            
+         }
+         if (command.includes('filter')) {
+            var split = command.split(' ')
+            var filter = {userId: message.author.id}
+            var page = 1
+            if(split.includes('shiny')){
+               filter = {...filter, ...{isShiny: true}}
+            }
+            if(split.includes('name')){
+               filter = {...filter, ...{name: split[split.indexOf("name") + 1]}}
+            }
+            if(split.includes('tier')){
+               filter = {...filter, ...{tier: Number(split[split.indexOf("tier") + 1])}}
+            }
+            if(split.includes('type')){
+               filter = {...filter, ...{types: split[split.indexOf("type") + 1]}}
+            }
+            if(split.includes('region')){
+               filter = {...filter, ...{region: split[split.indexOf("region") + 1]}}
+            }
+            if(split.includes('level')){
+               filter = {...filter, ...{level: Number(split[split.indexOf("level") + 1])}}
+            }
+            if(split.includes('iv perfect')){
+               filter = {...filter, ...{iv: {hp: 31, attack: 31,defense: 31,specialAttack: 31,specialDefense: 31,speed: 31}}}
+            }
+            if(split.includes('page')){
+               page = split[split.indexOf("page") + 1]
+            }
+            console.log(filter)
+            var table = await userManager.getUserPokemonTable(filter, page);
+            user = {...user, ...{lastFilter: table}}
+            await userManager.updateUser(user)
+            var embed = await embedGenerator.getTableEmbed(user, table);
+            embeds.push(embed)
+         }
+         if(command.includes('table')){
+            var table = await userManager.getUserPokemonTable({userId: message.author.id}, 1);
+            var embed = await embedGenerator.getTableEmbed(user, table);
+            embeds.push(embed)
+         }
+         if(command.includes('select')){
+            var choice =(command.split(' '))[1]
+            //console.log(user.lastFilter[choice].uuid)
+            var currentPokemon = await pokemonManager.loadUserPokemon({userId: user.id, uuid: user.lastFilter[choice].uuid})
+            user.currentPokemon = currentPokemon.uuid
+            await userManager.updateUser(user)
             var buffer = await pokemonManager.createPokemonView(currentPokemon, user.avatar);
-            var file = new AttachmentBuilder(buffer, 'pokemonView.png');
-            var desc = `Registered ${userMessage.username}`
-            var attachment = 'attachment://pokemonView.png'
-            var embed = await embedGenerator.getGenericEmbed(desc, file, attachment)
+            var file = new AttachmentBuilder(buffer).setName('selectPokemonView.png');
+            var desc = `Set buddy to ${currentPokemon.name}!`
+            var attachment = 'attachment://selectPokemonView.png'
+            var embed = await embedGenerator.getGenericEmbed(user, desc, attachment)
+            embeds.push(embed)
+            files.push(file)
          }
-         else{
-            var embed = await embedGenerator.getGenericEmbed('Please choose a starter','','')
+         if(command.includes('view')){
+            var split = command.split(' ')
+            var filter = 'minimal'
+            if(split.includes('stats')){
+               filter = "stats"
+            }
+            if(split.includes('moves')){
+               filter = "moves"
+            }
+            var choice = split[split.length-1]
+            var currentPokemon = {}
+            if(split.includes('buddy')){
+               currentPokemon = await pokemonManager.loadUserPokemon({userId: user.id, uuid: user.currentPokemon})
+            }else{
+               currentPokemon = await pokemonManager.loadUserPokemon({userId: user.id, uuid: user.lastFilter[choice].uuid})
+            }
+            var buffer = await pokemonManager.createPokemonView(currentPokemon, user.avatar);
+            var file = new AttachmentBuilder(buffer).setName('viewPokemonView.png');
+            var attachment = 'attachment://viewPokemonView.png'
+            var embed = await embedGenerator.getPokemonView(user,currentPokemon, filter, attachment)
+            embeds.push(embed)
+            files.push(file)
          }
-         message.channel.send(embed);
-      }
-      if(message.content.includes('.delete')){
-         //var user = await userManager.getUser(message.author.id)
-         await userManager.deleteUser(message.author.id);
-         //await userManager.deleteUser('1');
-      }
-      if (message.content.includes('.profile')) {
+         if(command.includes('load')){
+            var pokemon = []
+            for(var i = 1; i <= 800; i++){
+               pokemon.push(await pokemonManager.getNewPokemon(i, Math.floor(Math.random() * 100), false, message.author.id))
+            }
+            pokemonManager.catchPokemonBulk(pokemon);
+         }
          
       }
-      if (message.content.includes('.filter')) {
-         var split = message.content.split(' ')
-         var filter = {userId: message.author.id}
-         var page = 1
-         if(split.includes('shiny')){
-            filter = {...filter, ...{isShiny: true}}
-         }
-         if(split.includes('name')){
-            filter = {...filter, ...{name: split[split.indexOf("name") + 1]}}
-         }
-         if(split.includes('tier')){
-            filter = {...filter, ...{tier: Number(split[split.indexOf("tier") + 1])}}
-         }
-         if(split.includes('type')){
-            filter = {...filter, ...{types: split[split.indexOf("type") + 1]}}
-         }
-         if(split.includes('region')){
-            filter = {...filter, ...{region: split[split.indexOf("region") + 1]}}
-         }
-         if(split.includes('page')){
-            page = split[split.indexOf("page") + 1]
-         }
-         //console.log(filter)
-         var user = await userManager.getUser(message.author.id)
-         var table = await userManager.getUserPokemonTable(filter, page);
-         user = {...user, ...{lastFilter: table}}
-         await userManager.updateUser(user)
-         var embed = await embedGenerator.getTableEmbed(user, table);
-         message.channel.send(embed);   
+      message.channel.send({embeds: embeds, files: files})
+      }catch(error){
+         console.log(error)
       }
-      if(message.content.includes('.table')){
-         var user = await userManager.getUser(message.author.id)
-         var table = await userManager.getUserPokemonTable({userId: message.author.id}, 1);
-         var embed = await embedGenerator.getTableEmbed(user, table);
-         message.channel.send(embed);
-      }
-      if(message.content.includes('.select')){
-         var choice =(message.content.split(' '))[1]
-         var user = await userManager.getUser(message.author.id)
-         console.log(user.lastFilter[choice].uuid)
-         var currentPokemon = await pokemonManager.loadUserPokemon({userId: user.id, uuid: user.lastFilter[choice].uuid})
-         user.currentPokemon = currentPokemon.uuid
-         await userManager.updateUser(user)
-         var buffer = await pokemonManager.createPokemonView(currentPokemon, user.avatar);
-         var file = new AttachmentBuilder(buffer, 'pokemonView.png');
-         var desc = `Set buddy to ${currentPokemon.name}!`
-         var attachment = 'attachment://pokemonView.png'
-         var embed = await embedGenerator.getGenericEmbed(desc, file, attachment)
-         message.channel.send(embed);
-      }
-      if(message.content.includes('.view')){
-         var split = message.content.split(' ')
-         var filter = 'minimal'
-         if(split.includes('stats')){
-            filter = "stats"
-         }
-         var choice = split[split.length-1]
-         var user = await userManager.getUser(message.author.id)
-         var currentPokemon = await pokemonManager.loadUserPokemon({userId: user.id, uuid: user.lastFilter[choice].uuid})
-         var buffer = await pokemonManager.createPokemonView(currentPokemon, user.avatar);
-         var file = new AttachmentBuilder(buffer, 'pokemonView.png');
-         var attachment = 'attachment://pokemonView.png'
-         var embed = await embedGenerator.getPokemonView(currentPokemon, filter, file, attachment)
-         message.channel.send(embed);
-      }
-});
-
-async function filterUserPokemon(userId, filter, pageNumber) {
-	var table = await pokemonManager.getUserPokemonTable({
-			...filter,
-			...{
-				"userId": userId
-			}
-		}, pageNumber)
-		console.log(JSON.stringify(table))
-		return table
-}
-
-async function startBattle(userMessage){
-   var user = await userManager.getUser(userMessage.id);
-   const p = user.currentPokemon;
-   const p2 = await pokemonManager.getNewPokemon(150, 5, true, '1');
-   var battle = new Battle(p2)
-   const buffer = await pokemonManager.createBattleScene(p, p2);
-   // Define the embed here
-   const file = new AttachmentBuilder(buffer, 'battlescene.png');
-   const embed = new EmbedBuilder()
-      .setDescription(`${userMessage.username} encountered ${p2.name.charAt(0).toUpperCase()
-+ p2.name.slice(1)}!`)
-      .setImage('attachment://battlescene.png')
-      //console.log(embed)
-      // Send the embed
-      message.channel.send({
-         embeds: [embed],
-         files: [file]
-      });
-    
-}
-
-async function getProfile(userMessage){
-   
-   const embed = new EmbedBuilder()
-				.setDescription(`${userMessage.username} encountered ${p2.name.charAt(0).toUpperCase()
-  + p2.name.slice(1)}!`)
-				.setImage('attachment://battlescene.png')
-				//console.log(embed)
-				// Send the embed
-				message.channel.send({
-					embeds: [embed],
-					files: [file]
-				});
-}
-
-async function finishBattle(){
-   
-}
-
-
-
-main().catch(console.error);
+})
