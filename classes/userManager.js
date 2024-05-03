@@ -22,7 +22,7 @@ class UserManager {
 
 	//user will select starter pokemon and start region
 	async registerUser(id, name, currentPokemon, location) {
-		//constructor(id, name, currentPokemon, wallet, items, achievements, quests, avatar, location, tier, lastFilter)
+		//constructor(id, name, currentPokemon, wallet, items, achievements, quests, avatar, location, tier, filter, lastFilterTable, page)
 		var user = new User(id, name, currentPokemon.uuid, {
 				money: 0,
 				pokeCoins: 0
@@ -30,7 +30,7 @@ class UserManager {
 						name: "potion",
 						quantity: 5
 					}
-				], [], [], "https://play.pokemonshowdown.com/sprites/trainers/sage.png", location, 1, {})
+				], [], [], "https://play.pokemonshowdown.com/sprites/trainers/sage.png", location, 1, '',[],1)
       await this.updateUser(user)
       return user;
       
@@ -42,16 +42,7 @@ class UserManager {
 		})
 	}
    
-   async getUserPokemonTable(filter, pageNumber) {
-		//async getFromCollectionByFieldsWithPagination(collectionName, fields, pageNumber, itemsPerPage, projection)
-      var result = await this.dbConnection.getFromCollectionByFieldsWithPagination("userPokemon", filter, pageNumber, this.pageSize, ["name","uuid"])
-		var table = {}
-		for (var i = 0; i < result.length; i++) {
-			table[i] = result[i]
-		}
-      //console.log(table)
-		return table
-	}
+   
 
 }
 

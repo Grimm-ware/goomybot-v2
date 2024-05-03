@@ -36,6 +36,11 @@ class GlobalUtility {
 			setTimeout(resolve, ms);
 		});
 	}
+   
+   static getRandomRange(limit){
+		// Generate a random index between 0 and limit length minus 1
+      return Math.floor(Math.random() * limit);
+   }
 
 	static getRandomFromArray(arr) {
 		// Generate a random index between 0 and the array length minus 1

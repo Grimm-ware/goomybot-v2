@@ -17,7 +17,7 @@ class PokemonManager {
 			"userId": pokemon.userId,
          "uuid": pokemon.uuid
 		})
-   }
+   } 
    
    async loadUserPokemon(filter){
       var dbResponse = (await this.dbConnection.getFromCollectionByField('userPokemon', filter))[0]
@@ -55,7 +55,7 @@ class PokemonManager {
 				nextExp = this.calculateExp(dbResponse, level + 1)
 			}
 			//console.log(`Next EXP: ${JSON.stringify(nextExp)}`)
-			var moves = this.getRandomMoves(dbResponse, level)
+			var moves = await this.getRandomMoves(name, level)
 			//console.log(`Moves: ${JSON.stringify(moves)}`)
 			var heldItem = this.getRandomHeldItem(dbResponse, level)
 			//console.log(`Held Item: ${JSON.stringify(heldItem)}`)
@@ -93,7 +93,7 @@ class PokemonManager {
 				nextExp = this.calculateExp(dbResponse, level + 1)
 			}
 			//console.log(`Next EXP: ${JSON.stringify(nextExp)}`)
-			var moves = this.getRandomMoves(dbResponse, level)
+			var moves = await this.getRandomMoves(dbResponse.name, level)
 			//console.log(`Moves: ${JSON.stringify(moves)}`)
 			var heldItem = this.getRandomHeldItem(dbResponse, level)
 			//console.log(`Held Item: ${JSON.stringify(heldItem)}`)
@@ -101,7 +101,63 @@ class PokemonManager {
 			//console.log(JSON.stringify(p))
 			return p
 	}
-   
+   //testing function
+	async getNewPokemonBulkRegion(region, level, isShiny, originalTrainerId) {
+		//pokemon constructor(id, name, types, level, exp, nextExp, nickName, ability, nature, stats, ev, iv, moves, gender, statusCondition, tier, region, heldItem, isShiny, sprite, originalTrainerId)
+		var pokemon = []
+      const projection = {
+        id: 1, 
+        name: 1,
+        types: 1,
+        tier: 1,
+        region: 1,
+        growth_rate: 1
+        // Add other fields as needed
+      }; 
+      //console.log('Querying bulk region')
+      
+      var dbResponse = (await this.dbConnection.getFromCollectionByFieldProjection('pokemon', {
+				region: region
+			}, projection))
+      console.log('Got response')
+      //console.log(dbResponse)
+      for(var i = 0; i < dbResponse.length; i++){   
+       //console.log(i) 
+		var name = dbResponse[i].name
+			//console.log(`Name: ${JSON.stringify(name)}`)
+			var nature = GlobalUtil.getRandomFromArray(this.getNatures());
+		//console.log(`Nature: ${JSON.stringify(nature)}`)
+		var iv = this.getRandomIv();
+		//console.log(`IV: ${JSON.stringify(iv)}`)
+		var ev = this.getEv();
+		var stats = this.getStats(dbResponse[i], level, iv, ev, nature)
+			//console.log(`Stats: ${JSON.stringify(stats)}`)
+			var types = this.getTypes(dbResponse[i])
+			//console.log(`Type(s): ${JSON.stringify(types)}`)
+			var ability = this.getRandomAbility(dbResponse[i]);
+		//console.log(`Ability: ${JSON.stringify(ability)}`)
+		var gender = this.getRandomGender()
+			//console.log(`Gender: ${JSON.stringify(gender)}`)
+			var sprite = this.getSprite(dbResponse[i], isShiny)
+			//console.log(`Sprite: ${JSON.stringify(sprite)}`)
+			//console.log(`Growth Rate: ${JSON.stringify(dbResponse[i].growth_rate)}`)
+			var exp = this.calculateExp(dbResponse[i], level)
+			//console.log(`EXP: ${JSON.stringify(exp)}`)
+			var nextExp = 0
+			if (level != 100) {
+				nextExp = this.calculateExp(dbResponse[i], level + 1)
+			}
+			//console.log(`Next EXP: ${JSON.stringify(nextExp)}`)
+			var moves = await this.getRandomMoves(dbResponse[i].name, level)
+			//console.log(`Moves: ${JSON.stringify(moves)}`)
+			var heldItem = this.getRandomHeldItem(dbResponse[i], level)
+			//console.log(`Held Item: ${JSON.stringify(heldItem)}`)
+			var p = new Pokemon(originalTrainerId, dbResponse[i].id, dbResponse[i].name, types, level, exp, nextExp, "", ability, nature, stats, ev, iv, moves, gender, "", dbResponse[i].tier, dbResponse[i].region, heldItem, isShiny, sprite, originalTrainerId)
+			//console.log(JSON.stringify(p))
+			pokemon.push(p)
+      }
+      return pokemon
+	}   
    async createBattleScene(userPokemon, wildPokemon){
       var back = ''
       if(userPokemon.sprite.back != null){
@@ -160,8 +216,8 @@ class PokemonManager {
          
 
         // Position the front image in the top right corner
-        ctx.drawImage(front, 50, 60);
-        ctx.drawImage(avatar, 0, 60);
+        ctx.drawImage(front, 45, 30);
+        ctx.drawImage(avatar, -20, 60);
 
         // Position the back image in the bottom left corner
         //ctx.drawImage(back, -25, 60);
@@ -192,7 +248,16 @@ class PokemonManager {
 		await this.dbConnection.upsertBulkObject("userPokemon", bulkOperation, "uuid")
 	}
 
-	
+	async getUserPokemonTable(filter, pageNumber) {
+		//async getFromCollectionByFieldsWithPagination(collectionName, fields, pageNumber, itemsPerPage, projection)
+      var result = await this.dbConnection.getFromCollectionByFieldsWithPagination("userPokemon", filter, pageNumber, this.pageSize, ["name","uuid"])
+		var table = []
+		for (var i = 0; i < result.length; i++) {
+			table[i] = result[i]
+		}
+      //console.log(table)
+		return table
+	}
 
 	getRandomHeldItem(dbResponse) {
 		if (Math.random() <= .5 && dbResponse.held_items.length != 0) {
@@ -202,11 +267,15 @@ class PokemonManager {
 		}
 	}
 
-	getRandomMoves(dbResponse, level) {
+	async getRandomMoves(name, level) {
 		var possible = []
-		for (var i = 0; i < dbResponse.moves.length; i++) {
-			if (dbResponse.moves[i].version_group_details[0].level_learned_at <= level && dbResponse.moves[i].version_group_details[0].move_learn_method.name != "egg" && dbResponse.moves[i].version_group_details[0].move_learn_method.name != "machine" && dbResponse.moves[i].version_group_details[0].move_learn_method.name != "tutor") {
-				possible.push(dbResponse.moves[i].move.name)
+      var pokemonMoves = (await this.dbConnection.getFromCollectionByField('pokemonMoves', {
+				name: name
+			}))[0]
+      //console.log(pokemonMoves) 
+		for (var i = 0; i < pokemonMoves.moves.length; i++) {
+			if (pokemonMoves.moves[i].version_group_details[0].level_learned_at <= level && pokemonMoves.moves[i].version_group_details[0].move_learn_method.name != "egg" && pokemonMoves.moves[i].version_group_details[0].move_learn_method.name != "machine" && pokemonMoves.moves[i].version_group_details[0].move_learn_method.name != "tutor") {
+				possible.push(pokemonMoves.moves[i].move.name)
 			}
 		}
 		if (possible.length == 1) {

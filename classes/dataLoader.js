@@ -4,6 +4,8 @@ const DatabaseManager = require("./databaseManager.js")
 const pokemonAPI = new PokemonAPI();
 const GlobalUtil = require("./globalUtility.js");
 
+
+
 async function main() {
 	await dbConnection.connect();
 	//await addGrowthRateToPokemon();
@@ -27,8 +29,6 @@ async function main() {
 	await dbConnection.disconnect();
 
 }
-
-main().catch(console.error);
 
 async loadMoves() {}
 
@@ -129,7 +129,7 @@ async function addTierAndRegionToPokemon() {
 					// Handle the error here
 
 				}
-				await GlobalUtil.sleep(300);
+				await GlobalUtil.sleep(1000);
 	}
 }
 
@@ -196,13 +196,13 @@ async function loadPokemon() {
 	for (var i = 1; i <= 1017; i++) {
 		console.log(`Pokemon Iteration: ${i}`);
 		const data = await pokemonAPI.getPokemonById(i);
-
+      console.log(data)
 		if (data && data != 'Not Found') {
 			//console.log("Received data:", data);
 			// You can handle the data here
-			await dbConnection.upsertObject("pokemon", data, {
+			/*await dbConnection.upsertObject("pokemon", data, {
 				name: data.name
-			});
+			});*/
 		} else {
 			console.log("Data was not found");
 			// Handle the error here

@@ -101,6 +101,50 @@ const config = require('../config/botConfig.json')
 		}
 	}
 
+   async getFromCollectionByFieldProjection(collection, field, projection) {
+       try {
+           // Connect to the database
+           var database = this.client.db();
+           var collection = database.collection(collection);
+           
+           // Perform the query with projection
+           const result = await collection.find(field, projection).toArray();
+           
+           // Return the query result
+           return result;
+       } catch (error) {
+           console.error('Error querying collection by field:', error);
+           throw error;
+       }
+   }
+
+   async getFromCollectionByAggregate(collectionName, field, value) {
+     try {
+       // Get the database and collection
+       const database = this.client.db();
+       const collection = database.collection(collectionName);
+
+       // Construct the aggregation pipeline dynamically
+       const pipeline = [
+         {
+           $match: {
+             [field]: value
+           }
+         }
+       ];
+
+       // Execute the aggregation pipeline
+       const result = await collection.aggregate(pipeline).toArray();
+
+       return result;
+     } catch (error) {
+       console.error('Error retrieving documents aggregate:', error);
+       // Ensure disconnection in case of error
+       await this.disconnect();
+       throw error;
+     }
+   }
+
 	//used for creating user views, generally to get pokemon but in future can be used for items or whatever else
 	async getFromCollectionByFieldsWithPagination(collectionName, fields, pageNumber, itemsPerPage, projection) {
 		try {

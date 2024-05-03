@@ -1,35 +1,37 @@
-const GlobalUtil = require("./classes/globalUtility.js");
+const GlobalUtil = require("./globalUtility.js");
 
-class Batlle{
-   constructor(wildPokemon){
-      this.id = GlobalUtil.getuuid();
+class Battle{
+   constructor(channel, user, userPokemon, wildPokemon, embed, file){
+      this.id = GlobalUtil.getRandomRange(1000)
+      this.channel =''
+      this.uuid = GlobalUtil.getuuid();
       this.users = []
-      this.wildPokemon = {}
-      //end time in Date.now() format
-      this.timer = null;
+      this.embeds = []
+      this.files = []
+      this.users.push(user.id)
+      this.wildPokemon = wildPokemon
+      
+      this.embeds.push(embed)
+      this.files.push(file)      
+      this.startTime = ''
+      this.timer = null
       this.rewards = []
    }
    
-   //user includes currentPokemon
-   //passing in a finish battle function, will handle logic around sending messages, adding pokemon to users and user rewards
-   //call this without await
-   async startBattle(user, finishBattle){   
-      this.users.push(userId);
-      this.simulateBattle(user.currentPokemon);
-      return new Promise((resolve) => {
-        return setTimeout(() => {
-        finishBattle(this);
-        resolve(); // Resolve the promise when the timer expires
-      }, this.timer);
-    })
-     
+   startBattle(){
+      this.startTime = Date.now()
+      this.simulateBattle()
    }
    
    simulateBattle(){
       this.timer = 5000
    }
    
-   joinBattle(userId){
-      
+   joinBattle(user, embed, file){
+      this.users.push(user.id)
+      this.embeds.push(embed)
+      this.files.push(files)
    }
 }
+
+module.exports = Battle
