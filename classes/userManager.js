@@ -19,10 +19,11 @@ class UserManager {
 			"userId": id
 		})
    }
-
+   
 	//user will select starter pokemon and start region
+   
 	async registerUser(id, name, currentPokemon, location) {
-		//constructor(id, name, currentPokemon, wallet, items, achievements, quests, avatar, location, tier, filter, lastFilterTable, page)
+		//constructor(id, name, currentPokemon, wallet, items, achievements, quests, avatar, location, tier, frame, pokemonSeed, shinySeed, tierSeed, filter, lastFilterTable, page)
 		var user = new User(id, name, currentPokemon.uuid, {
 				money: 0,
 				pokeCoins: 0
@@ -30,7 +31,7 @@ class UserManager {
 						name: "potion",
 						quantity: 5
 					}
-				], [], [], "https://play.pokemonshowdown.com/sprites/trainers/sage.png", location, 1, '',[],1)
+				], [], [], "https://play.pokemonshowdown.com/sprites/trainers/sage.png", location, 1, 1, Math.random(),Math.random(), Math.random(),'',[],1)
       await this.updateUser(user)
       return user;
       

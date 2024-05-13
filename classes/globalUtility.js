@@ -63,6 +63,75 @@ class GlobalUtility {
 
 		return shuffledArray.slice(0, x); // Select the first x elements
 	}
+   
+   static capitalizeWords(str) {
+       // Check if the input is a string
+       if (typeof str !== 'string') {
+           // If not a string, return an empty string or throw an error
+           return ''; // or throw new Error('Input must be a string');
+       }
 
+       // Split the string into an array of words
+       const words = str.split(/\s+/);
+
+       // Capitalize each word and handle hyphens
+       const capitalizedWords = words.map(word => {
+           // If the word contains a hyphen
+           if (word.includes('-')) {
+               // Split the word by hyphen and capitalize each part
+               return word.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+           } else {
+               // Capitalize the word
+               return word.charAt(0).toUpperCase() + word.slice(1);
+           }
+       });
+
+       // Join the capitalized words into a single string
+       return capitalizedWords.join(' ');
+   }
+   
+   static convertToCalcFormat(inputObj) {
+    // Define the mapping between input and output property names
+    const propertyMapping = {
+        hp: 'hp',
+        attack: 'atk',
+        defense: 'def',
+        specialAttack: 'spa',
+        specialDefense: 'spd',
+        speed: 'spe'
+    };
+
+    // Initialize an empty output object
+    const outputObj = {};
+
+    // Iterate over the properties of the input object
+    for (const prop in inputObj) {
+        if (inputObj.hasOwnProperty(prop)) {
+            // Get the corresponding property name in the output format
+            const outputProp = propertyMapping[prop];
+
+            // If a corresponding property exists in the mapping, assign the value to the output object
+            if (outputProp) {
+                outputObj[outputProp] = inputObj[prop];
+            }
+        }
+    }
+
+    // Return the output object
+    return outputObj;
+   }
+   
+   static valuesToArray(obj) {
+    const result = [];
+
+    // Iterate over the keys and push their values into the array
+    for (const key in obj) {
+        if (Object.hasOwnProperty.call(obj, key)) {
+            result.push(obj[key]);
+        }
+    }
+
+    return result;
+}
 }
 module.exports = GlobalUtility;

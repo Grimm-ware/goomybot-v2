@@ -1,5 +1,6 @@
 const Pokemon = require('./pokemon.js')
-	const GlobalUtil = require("./globalUtility.js");
+const Generator = require('./generator.js')
+const GlobalUtil = require("./globalUtility.js");
 const {
 	createCanvas,
 	loadImage
@@ -157,7 +158,17 @@ class PokemonManager {
 			pokemon.push(p)
       }
       return pokemon
-	}   
+	}
+
+   async getPokemonTierIndex(tier, index){
+      const projection = {
+        id: 1
+      }; 
+      //console.log('Querying bulk region') 
+      return (await this.dbConnection.getFromCollectionByFieldProjection('pokemon', {
+				tier: tier
+			}, projection))[index]
+   }
    async createBattleScene(userPokemon, wildPokemon){
       var back = ''
       if(userPokemon.sprite.back != null){
@@ -200,7 +211,6 @@ class PokemonManager {
       }else{
          front = await loadImage(userPokemon.sprite.front);
       }
-      
       var avatar = await loadImage(userAvatar);
       
       //const front = await loadImage(wildPokemon.sprite.front); // Replace with your image URLs
@@ -215,10 +225,35 @@ class PokemonManager {
         const ctx = canvas.getContext('2d');
          
 
-        // Position the front image in the top right corner
+        // Position the front image in the top right corner        
         ctx.drawImage(front, 45, 30);
         ctx.drawImage(avatar, -20, 60);
+        // Position the back image in the bottom left corner
+        //ctx.drawImage(back, -25, 60);
+      return canvas.toBuffer('image/png');
+   }
+   
+   async createGenericPokemon(userPokemon){
+      var front = ''
+      if(userPokemon.sprite.front != null){
+         front = await loadImage(userPokemon.sprite.front);
+      }else{
+         front = await loadImage(userPokemon.sprite.front);
+      }      
+      //const front = await loadImage(wildPokemon.sprite.front); // Replace with your image URLs
+      
+         // Calculate canvas size based on the maximum dimension of the images
+        // Calculate canvas size to accommodate both images diagonally
+        const canvasWidth = front.width;
+        const canvasHeight = front.height;
 
+        // Create a canvas with a white background
+        const canvas = createCanvas(canvasWidth, canvasHeight);
+        const ctx = canvas.getContext('2d');
+         
+
+        // Position the front image in the top right corner        
+        ctx.drawImage(front,0,0)
         // Position the back image in the bottom left corner
         //ctx.drawImage(back, -25, 60);
       return canvas.toBuffer('image/png');
@@ -239,10 +274,17 @@ class PokemonManager {
 	async catchPokemon(pokemon, userId) {
 		pokemon.userId = userId
 			pokemon.originalTrainerId = userId
+         pokemon.level = 5
 			await this.dbConnection.upsertObject("userPokemon", pokemon, {
 				"uuid": pokemon.uuid
 			})
 	}
+   
+   async updatePokemon(pokemon){
+      await this.dbConnection.upsertObject("userPokemon", pokemon, {
+         "uuid": pokemon.uuid
+      })      
+   }
 
 	async catchPokemonBulk(bulkOperation) {
 		await this.dbConnection.upsertBulkObject("userPokemon", bulkOperation, "uuid")
@@ -569,7 +611,6 @@ class PokemonManager {
 			speed: 0
 		};
 	}
-
 }
 
 module.exports = PokemonManager

@@ -23,7 +23,7 @@ class Battle{
       this.simulateBattle()
    }
    
-   simulateBattle(){
+   simulateBattle(length){
       this.timer = 5000
    }
    

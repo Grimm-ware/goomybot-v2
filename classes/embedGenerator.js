@@ -7,7 +7,6 @@ class EmbedGenerator{
        const embed = new EmbedBuilder()
            .setTitle(user.name)
            .setDescription(description);
-
        if (attachment !== '') {
            embed.setImage(attachment); // Use the attachment URL directly
            //embed.setThumbnail(attachment); // Set the thumbnail to display next to the embed
@@ -15,6 +14,23 @@ class EmbedGenerator{
        }
 
        return embed;
+   }
+   
+   async setColor(embed, shiny, tier){
+      var color = 'Blue'
+      if(tier == 2){
+         color = 'Green'
+      }else if(tier == 3){
+         color = 'Yellow'
+      }else if(tier == 4){
+         color = 'Red'
+      }
+      if(shiny){
+         color = '#f5baea'
+      }
+         
+      embed.setColor(color)
+      return embed
    }
 
       

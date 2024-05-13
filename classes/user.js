@@ -1,5 +1,5 @@
 class User {
-    constructor(id, name, currentPokemon, wallet, items, achievements, quests, avatar, location, tier, filter, lastFilterTable, page) {
+    constructor(id, name, currentPokemon, wallet, items, achievements, quests, avatar, location, tier, frame, pokemonSeed, shinySeed, tierSeed, filter, lastFilterTable, page) {
         this.id = id; // Discord user ID
         this.name = name;
         this.currentPokemon = currentPokemon;
@@ -10,6 +10,7 @@ class User {
         this.avatar = avatar;
         this.location = location;
         this.tier = tier;
+        this.frame = frame
         this.pokemonSeed = Math.random();
         this.shinySeed = Math.random();
         this.tierSeed = Math.random();
